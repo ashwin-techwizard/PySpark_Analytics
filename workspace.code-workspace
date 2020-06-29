@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"python.pythonPath": "C:\\Users\\Ashwin\\.msvscode.hdinsight\\hdinsightJupyter\\Scripts\\python.exe"
+	}
+}
