@@ -1,70 +1,141 @@
-# HelloFresh Data Engineering Test
+# Recipe Analytics
+## Analysing Recipe Data Using PySpark
 
-Thank you for your interest in joining HelloFresh! As part of our selection process, all of our candidates must take the following test.
-The test is designed to assess key competencies required in your role as a data engineer at HelloFresh.
-
-Please submit your answers in a different branch and create a pull request. Please do not merge your own pull request.
-
-_Note: While we love open source here at HelloFresh, please do not create a public repo with your test in! This challenge is only shared with people interviewing, and for obvious reasons we'd like it to remain this way._
+## Description
+To use PySpark to Filter recipes with beef as an ingredient and calculate the average cooking time then Classify with its difficulty levels (cooking time).
 
 
-# HelloFresh
-At HelloFresh, our mission is to change the way people eat - forever. From our 2011 founding in Europe’s vibrant tech hub Berlin, we’ve become the global market leader in the meal kit sector and inspire millions of energized home cooks across the globe every week.
-We offer our meal kit boxes full of exciting recipes and thoughtfully sourced, fresh ingredients in more than 13 countries, operating from offices in Berlin, New York City, Sydney, Toronto, London, Amsterdam and Copenhagen and shipped out more than 250 Million meals in 2019.
-Data Engineering at HelloFresh
-We ingest events from our Kafka Stream and store them in our DataLake on s3. 
-Events are sorted by arriving date. For example `events/recipe_changes/2019/11/29`.
-During events processing we heavily rely on execution day to make sure we pick proper chunk of data and keep historical results.
-We use Apache Spark to work with data and store it on s3 in parquet format. Our primary programming language is Python.
+**Formula :** ``` total_cook_time = cookTime + prepTime ```
 
-# Exercise
-## Overview
-At HelloFresh we have a big recipes archive that was created over the last 8 years. 
-It is constantly being updated either by adding new recipes or by making changes to existing ones. 
-We have a service that can dump archive in JSON format to selected s3 location. 
-We are interested in tracking changes to see available recipes, their cooking time and difficulty level.
+**Criteria** | **total_cook_time**
+------------ | -------------
+easy | less than 30 mins
+medium | between 30 and 60 mins
+hard | more than 60 mins.
 
-## Task 1
-Using Apache Spark and Python, read and pre-process rows to ensure further optimal structure and performance 
-for further processing. 
-Use the dataset on S3 as the input (https://s3-eu-west-1.amazonaws.com/dwh-test-resources/recipes.json). It's fine to download it locally.
+**Note*
 
-## Task 2
-Using Apache Spark and Python read processed dataset from step 1 and: 
-1. extract only recipes that have `beef` as one of the ingredients
-2. calculate average cooking time duration per difficulty level
+### prerequisite & assumption
 
-Total cooking time duration can be calculated by formula:
-```bash
-total_cook_time = cookTime + prepTime
-```  
+**For Incorrect time format the duration is considered as 0 mins**
 
-Criteria for levels based on total cook time duration:
-- easy - less than 30 mins
-- medium - between 30 and 60 mins
-- hard - more than 60 mins.
+**for local deployment**
+  <p> Assuming that Python version 3, PySpark and Hadoop-home and winUtils configured </p>
 
-## Deliverables
-- A deployable Spark Application written in Python
-- a README file with brief explanation of approach, data exploration and assumptions/considerations. 
-You can use this file by adding new section or create a new one.
-- a CSV file with average cooking time per difficulty level. Please add it to `output` folder.
-File should have 2 columns: `difficulty,avg_total_cooking_time` and named as `report.csv`
+### Code Outline
+**High-level Overview**
+* Load Data
+* Transform Data
+* Filter data
+* Difficulty metrics
 
-## Requirements
-- Well structured, object-oriented, documented and maintainable code
-- Unit tests to test the different components
-- Errors handling
-- Documentation
-- Solution is deployable and we can run it
+Following file structure is advised: (in case of errors, please consult this)
+And execution of spark-submit and python should be done using this as current folder
 
-## Bonus points
-- Config handling
-- Logging and alerting
-- Consider scaling of your application
-- CI/CD explained
-- Performance tuning explained
-- We love clean and maintainable code
-- We appreciate good combination of Software and Data Engineering
+```
 
-Good Luck!
+
+./
+... RecipesEtl.py
+... Readme.md
+... ReadmeDemo.md
+... requirements.txt
+... TestsoTimeToMin.py
+... TestDataframe.py
+... config/
+... ... filter_config.json
+... dependencies/
+... ... logging_utils.py
+... ... spark_utils.py
+... input/
+... ... recipes.json
+... ... testInput.json
+... packages.zip
+... output/
+... ... report.csv
+
+```
+### Required Libraries
+You can install necessary packages to run these codes by running the following:
+```pip install -r requirements.txt```
+
+
+- - - -
+
+### To run locally
+```   
+ spark-submit --py-files packages.zip --files configs/filter_config.json  RecipesETL.py -i input/recipes.json -o output/report.csv -c /configs/filter_config.json
+
+- Make sure the script has top be executed from current directory
+
+```
+### Unit tests 
+
+* Unit test cases have been created using unit-test module of python
+
+* Dataframe comparator  using padas testing has been created to check transformation  and metrics 
+
+**Run Test**
+
+- Make sure the script has top be executed from current directory 
+```
+ python TestDataframe.py
+ 
+ python TestDataframe.py
+ 
+```
+### Errors handling
+
+* Most of the known exceptions are handled 
+* Extra functionality has been added to filter the null and bad records coming from the source
+
+* TODO Handle JSON format exeption during the load.
+ 
+
+## Config handling
+
+* Used config with spark to pass the required params in JSON format
+
+
+### Logging and alerting
+
+* Log4j has also be configured with spark configuration.
+* Application Level logs can be captured.
+* Also, the Bad records from source can be logged for the further refinement of the process flow.
+
+* System logs also can be captured and logged.
+  * then Cloud watch can be used along with SNS Alerting.  
+  * SNS can further be used to handle based on the scenarios.
+* using email notification or Lamda function for any immediate actions 
+
+
+## Consider scaling of your application
+
+* This application can be scaled by deploying to AWS EMR Or Yarn 
+* dynamic scaling feature can be used to save the cost 
+Parameters are can tuned based num-executors executor-cores executor-memory
+
+## CI/CD explained
+
+* Infrastructure can be created from code based on the size and usage of data using terraform or cloudformation 
+
+* Deployment of code to Environments right from repository Jenkins on an EC2 instance or AWS CodePipeline
+
+## Performance tuning explained
+
+* Used Cache for the initial transformation to avoid further re-computation 
+
+```
+--num-executors
+
+--executor-cores
+
+--executor-memory
+
+```
+
+* These settings can be further configured based on the size and amount of parallelism needed to process.
+
+* Also based on the amount of Diver memory configuration the amount of data collected back to the driver from executor have to be estimated to prevent error.
+
+- - - -
